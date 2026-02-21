@@ -56,6 +56,14 @@ func main() {
 
 	// 业务接口组
 	api := r.Group("/api")
+
+	// 公开接口 (无需鉴权)
+	auth := api.Group("/auth")
+	{
+		auth.POST("/signup", handlers.SignUp)
+		auth.POST("/login", handlers.Login)
+	}
+
 	api.Use(middleware.AuthMiddleware()) // 全局 JWT 鉴权
 	{
 		// 记录相关
