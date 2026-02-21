@@ -1,5 +1,6 @@
 # Build stage
-FROM golang:1.25-alpine AS builder  # 核心修改：1.21 → 1.25
+# 核心修改：Go版本从1.21升级到1.25，对齐go.mod要求
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 
