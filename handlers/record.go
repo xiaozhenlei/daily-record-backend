@@ -80,7 +80,7 @@ func GetTodayRecords(c *gin.Context) {
 		Eq("user_id", userID).
 		Gte("created_at", start).
 		Lte("created_at", end).
-		Order("created_at", &utils.OrderOptions{Ascending: false}).
+		Order("created_at", nil).
 		ExecuteTo(&records)
 
 	if err != nil {
@@ -109,7 +109,7 @@ func GetDateRecords(c *gin.Context) {
 		Eq("user_id", userID).
 		Gte("created_at", start).
 		Lte("created_at", end).
-		Order("created_at", &utils.OrderOptions{Ascending: false}).
+		Order("created_at", nil).
 		ExecuteTo(&records)
 
 	if err != nil {
@@ -127,7 +127,7 @@ func DeleteRecord(c *gin.Context) {
 
 	// 注意：Supabase 表开启了 RLS，正常情况下无需额外校验 user_id 匹配，
 	// 但为了代码严谨，可通过 Eq 明确限制。
-	_, err := utils.Client.From("daily_records").
+	_, _, err := utils.Client.From("daily_records").
 		Delete("", "").
 		Eq("id", id).
 		Eq("user_id", userID).

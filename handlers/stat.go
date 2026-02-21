@@ -79,12 +79,16 @@ func GetYearStat(c *gin.Context) {
 		return
 	}
 
-	// 查询全年数据
+	// 查询全年数据 (使用范围查询替代 Like，对 TIMESTAMP 更友好)
+	nextYear, _ := strconv.Atoi(yearStr)
+	nextYearStr := strconv.Itoa(nextYear + 1)
+
 	var records []models.Record
 	_, err := utils.Client.From("daily_records").
 		Select("*", "exact", false).
 		Eq("user_id", userID).
-		Like("created_at", yearStr+"-%").
+		Gte("created_at", yearStr+"-01-01 00:00:00").
+		Lt("created_at", nextYearStr+"-01-01 00:00:00").
 		ExecuteTo(&records)
 
 	if err != nil {
@@ -177,8 +181,16 @@ func ExportYear(c *gin.Context) {
 	userID := c.GetString("user_id")
 	year := c.Query("year")
 
+	nextYear, _ := strconv.Atoi(year)
+	nextYearStr := strconv.Itoa(nextYear + 1)
+
 	var records []models.Record
-	utils.Client.From("daily_records").Select("*", "exact", false).Eq("user_id", userID).Like("created_at", year+"-%").ExecuteTo(&records)
+	utils.Client.From("daily_records").
+		Select("*", "exact", false).
+		Eq("user_id", userID).
+		Gte("created_at", year+"-01-01 00:00:00").
+		Lt("created_at", nextYearStr+"-01-01 00:00:00").
+		ExecuteTo(&records)
 
 	summary := fmt.Sprintf("🏆 %s年度精进报告\n\n", year)
 	tagTotal := make(map[string]int)

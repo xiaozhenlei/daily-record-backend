@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -30,23 +31,38 @@ func AuthMiddleware() gin.HandlerFunc {
 		tokenString := parts[1]
 
 		// Supabase JWT 验证逻辑
-		// 注意：Supabase JWT 是由其 Auth 服务签发的
-		// 验证时需要使用其提供的 JWT Secret (SUPABASE_KEY 在某些场景下可用于简单校验，
-		// 但标准解析应通过其 JWK 或共享密钥)
-		// 这里我们主要解析出 user_id 并假设外部网关或 Supabase 公钥已配置
+		var claims jwt.MapClaims
+		var token *jwt.Token
+		var err error
 
-		token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
-		if err != nil {
-			utils.Error(c, 401, "无效的令牌")
+		jwtSecret := os.Getenv("SUPABASE_JWT_SECRET")
+		if jwtSecret != "" {
+			// 1. 如果配置了密钥，进行完整签名验证 (生产环境推荐)
+			token, err = jwt.ParseWithClaims(tokenString, &jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+				return []byte(jwtSecret), nil
+			})
+		} else {
+			// 2. 如果未配置密钥，仅解析声明 (仅供演示或信任前端安全场景)
+			token, _, err = new(jwt.Parser).ParseUnverified(tokenString, &jwt.MapClaims{})
+		}
+
+		if err != nil || token == nil {
+			utils.Error(c, 401, "无效或已过期的令牌")
 			c.Abort()
 			return
 		}
 
+		// 解析声明
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			utils.Error(c, 401, "解析令牌失败")
-			c.Abort()
-			return
+			// 如果是 ParseWithClaims 可能会返回 *jwt.MapClaims
+			if mapPtr, ok := token.Claims.(*jwt.MapClaims); ok {
+				claims = *mapPtr
+			} else {
+				utils.Error(c, 401, "解析令牌声明失败")
+				c.Abort()
+				return
+			}
 		}
 
 		// 从 claims 中提取 sub (即 user_id)
