@@ -80,7 +80,7 @@ func GetTodayRecords(c *gin.Context) {
 		Eq("user_id", userID).
 		Gte("created_at", start).
 		Lte("created_at", end).
-		Order("created_at", nil).
+		Order("created_at", &utils.OrderOptions{Ascending: false}).
 		ExecuteTo(&records)
 
 	if err != nil {
@@ -109,7 +109,7 @@ func GetDateRecords(c *gin.Context) {
 		Eq("user_id", userID).
 		Gte("created_at", start).
 		Lte("created_at", end).
-		Order("created_at", nil).
+		Order("created_at", &utils.OrderOptions{Ascending: false}).
 		ExecuteTo(&records)
 
 	if err != nil {

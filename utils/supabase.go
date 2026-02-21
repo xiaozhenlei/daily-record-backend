@@ -3,6 +3,7 @@ package utils
 import (
 	"os"
 
+	"github.com/supabase-community/postgrest-go"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -23,3 +24,6 @@ func InitSupabase() {
 		panic("Failed to initialize Supabase client: " + err.Error())
 	}
 }
+
+// OrderOptions 排序配置 (使用类型别名以兼容 postgrest)
+type OrderOptions = postgrest.OrderOpts
