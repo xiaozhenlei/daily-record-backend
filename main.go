@@ -9,13 +9,35 @@ import (
 	"github.com/user/daily-records-backend/handlers"
 	"github.com/user/daily-records-backend/middleware"
 	"github.com/user/daily-records-backend/utils"
+	"go.uber.org/zap"
 )
 
 func main() {
+	// 初始化日志
+	utils.InitLogger()
+	defer utils.Logger.Sync()
+
 	// 初始化 Supabase
 	utils.InitSupabase()
 
-	r := gin.Default()
+	r := gin.New() // 使用 New 而不是 Default，以自定义中间件
+
+	// 2. 日志中间件
+	r.Use(func(c *gin.Context) {
+		start := time.Now()
+		c.Next()
+		latency := time.Since(start)
+
+		userID := c.GetString("user_id")
+		utils.Logger.Info("API Request",
+			zap.String("user_id", userID),
+			zap.String("path", c.Request.URL.Path),
+			zap.Int("status", c.Writer.Status()),
+			zap.Duration("latency", latency),
+		)
+	})
+
+	r.Use(gin.Recovery())
 
 	// 1. 跨域配置 (CORS)
 	r.Use(cors.New(cors.Config{
@@ -46,13 +68,20 @@ func main() {
 			records.DELETE("/delete/:id", handlers.DeleteRecord)
 		}
 
-		// 统计相关
+		// 统计相关 (原有)
 		stat := api.Group("/stat")
 		{
 			stat.GET("/week", handlers.GetWeekStat)
 			stat.GET("/year", handlers.GetYearStat)
 			stat.GET("/export/week", handlers.ExportWeek)
 			stat.GET("/export/year", handlers.ExportYear)
+		}
+
+		// 增强版统计 (新增)
+		stats := api.Group("/stats")
+		{
+			stats.GET("/yearly", handlers.GetYearlyStats)
+			stats.GET("/monthly", handlers.GetMonthlyStats)
 		}
 	}
 
