@@ -1,17 +1,13 @@
 package models
 
-import (
-	"strings"
-)
-
 // Record 每日行动记录结构体
 type Record struct {
-	ID         string `json:"id"`
-	UserID     string `json:"user_id,omitempty"`
-	Content    string `json:"content" binding:"required,max=50"`
-	Tag        string `json:"tag" binding:"required"`
-	Duration   int    `json:"duration" binding:"min=0"`
-	CreatedAt  string `json:"created_at"`
+	ID        string `json:"id"`
+	UserID    string `json:"user_id,omitempty"`
+	Content   string `json:"content" binding:"required,max=50"`
+	Tag       string `json:"tag" binding:"required"`
+	Duration  int    `json:"duration" binding:"min=0"`
+	CreatedAt string `json:"created_at"`
 }
 
 // ValidateTag 验证标签并返回合法的标签
